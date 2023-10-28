@@ -1,18 +1,35 @@
-var createError = require("http-errors");
-var express = require("express");
-var path = require("path");
-var cookieParser = require("cookie-parser");
-var logger = require("morgan");
+const createError = require("http-errors");
+const express = require("express");
+const session = require('express-session');
+const path = require("path");
+const cookieParser = require("cookie-parser");
+const logger = require("morgan");
+const sequelize = require("./database");
 
-var indexRouter = require("./routes/index");
-var usersRouter = require("./routes/users");
+require('dotenv').config();
 
-var app = express();
+sequelize.sync(
+  // {force: true}
+).then(()=>console.log('database is ready'));
 
-const mangaRouter = require("./routes/index");
+const usersRouter = require("./routes/users.route"); 
+const authRoute = require("./routes/auth.route");
+const mangaRouter = require("./routes/manga.route");
+const passport = require("passport")
 
-app.use("/api", mangaRouter);
+const app = express();
 
+// Configuration express-session
+app.use(session({
+  cookie: {
+    maxAge: 60 * 60 * 1000,
+  },
+  secret: process.env.SECRET_KEY, 
+  resave: false,
+  saveUninitialized: false,
+}));
+
+// Dependences & middleware
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "jade");
 
@@ -21,9 +38,13 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
+app.use(passport.initialize());
+app.use(passport.session());
 
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
+// Routes
+app.use("/api/manga", mangaRouter);
+app.use("/api/users", usersRouter);
+app.use("/api/auth", authRoute);
 
 app.use(function (req, res, next) {
   next(createError(404));
