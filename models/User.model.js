@@ -1,9 +1,15 @@
 const { Model, DataTypes } = require("sequelize");
 const sequelize = require("../database");
+const { v4: uuidv4 } = require('uuid');
 
 class User extends Model{}
-
 User.init({
+    id: {
+        type: DataTypes.UUID,
+        defaultValue: () => uuidv4(),
+        allowNull: false,
+        primaryKey: true
+    },
     pseudo: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -18,18 +24,17 @@ User.init({
         type: DataTypes.STRING,
         allowNull: false
     },
-    salt: {
+    status: {
         type: DataTypes.STRING,
-        allowNull: false
-    },
-    // role: {
-    //     type: DataTypes.ENUM('user', 'admin', 'administrateur'),
-    //     allowNull: false,
-    //     defaultValue: 'user' // Set a default value if needed
-    // }
+        allowNull: false,
+        validate: {
+            isIn: [['0', '1', '2']]
+        },
+        defaultValue: '0'
+    }
 }, {
     sequelize,
-    modelName: "user"
+    modelName: "table_users"
 })
 
 module.exports = User;

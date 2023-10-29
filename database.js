@@ -1,7 +1,12 @@
 const { Sequelize } = require("sequelize");
-const sequelize = new Sequelize("manga-db", 'user', 'pass', {
+const path = require('path');
+
+// Spécifiez le chemin complet du fichier SQLite
+const databasePath = path.join(__dirname, './db.sqlite');
+
+const sequelize = new Sequelize({
     dialect: 'sqlite',
-    host: './db.sqlite'
-})
+    host: databasePath,
+});
 
 module.exports = sequelize;

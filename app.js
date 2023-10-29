@@ -1,33 +1,30 @@
 const createError = require("http-errors");
 const express = require("express");
-const session = require('express-session');
+const cors = require('cors');
 const path = require("path");
-const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const sequelize = require("./database");
 
-require('dotenv').config();
+require('dotenv').config({ path: './config/.env' });
+require('./database');
 
 sequelize.sync(
   // {force: true}
 ).then(()=>console.log('database is ready'));
 
 const usersRouter = require("./routes/users.route"); 
-const authRoute = require("./routes/auth.route");
+const authRouter = require("./routes/auth.route");
 const mangaRouter = require("./routes/manga.route");
-const passport = require("passport")
 
 const app = express();
 
-// Configuration express-session
-app.use(session({
-  cookie: {
-    maxAge: 60 * 60 * 1000,
-  },
-  secret: process.env.SECRET_KEY, 
-  resave: false,
-  saveUninitialized: false,
-}));
+//----- Entetes
+app.use((req, res, next) => {
+  res.setHeader('Access-Control-Allow-Origin', '*'); 
+  res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content, Accept, Content-Type, , Authorization'); 
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS'); 
+    next();
+  });
 
 // Dependences & middleware
 app.set("views", path.join(__dirname, "views"));
@@ -36,15 +33,15 @@ app.set("view engine", "jade");
 app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser());
 app.use(express.static(path.join(__dirname, "public")));
-app.use(passport.initialize());
-app.use(passport.session());
+
+//----- Headers & autorizations -----//
+app.use(cors());
 
 // Routes
 app.use("/api/manga", mangaRouter);
 app.use("/api/users", usersRouter);
-app.use("/api/auth", authRoute);
+app.use("/api/auth", authRouter);
 
 app.use(function (req, res, next) {
   next(createError(404));
